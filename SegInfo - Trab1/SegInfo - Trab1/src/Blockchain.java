@@ -15,7 +15,7 @@ public class Blockchain{
     // new block hash must be bellow 1024
     private static final int TARGET = 1024;
 
-    private static final Path directoryPath = Paths.get("SegInfo - Trab1/src/Blocks");
+    private static final Path directoryPath = Paths.get("src", "Blocks");
 
     private static final List<Double> blockCreationTimeList = new ArrayList<>();
 
@@ -163,7 +163,7 @@ public class Blockchain{
 
     public static void main(String[] args) throws Exception {
 
-        Path path = Paths.get("SegInfo - Trab1/src/alice.txt");
+        Path path = Paths.get("src", "alice.txt");
 
         int nBlocks = 1;
         if(args.length == 1){
@@ -202,6 +202,7 @@ public class Blockchain{
             blockCreationTimeSum += getBlockCreationTime(i);
         }
 
+        System.out.println("Means of the last " +  getBlockCreationTimeSize() + " blocks that been created\n");
         System.out.println("Average nonce: " +  nonceSum / nBlocks);
         System.out.println("Average blockCreationTime: " +  blockCreationTimeSum / nBlocks);
 
