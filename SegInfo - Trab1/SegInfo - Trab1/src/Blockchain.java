@@ -84,7 +84,16 @@ public class Blockchain{
 
 
     public static double getBlockCreationTime(int index) {
+        if(blockCreationTimeList.isEmpty()) {
+            return -1;
+        }
+
         return blockCreationTimeList.get(index);
+    }
+
+
+    public static int getBlockCreationTimeSize() {
+        return blockCreationTimeList.size();
     }
 
 
@@ -185,13 +194,10 @@ public class Blockchain{
         }
         System.out.println("\nALL DONE!\n");
 
-        // nBlocks now represents the number of existing blocks, not the number of blocks to create
-        nBlocks = getNextBlockIndex();
-
         // calculating the mean
         int nonceSum = 0;
         double blockCreationTimeSum = 0;
-        for (int i = 0; i < nBlocks; i++) {
+        for (int i = 0; i < getBlockCreationTimeSize(); i++) {
             nonceSum += getBlockNonce(i);
             blockCreationTimeSum += getBlockCreationTime(i);
         }
