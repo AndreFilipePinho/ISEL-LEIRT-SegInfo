@@ -42,10 +42,7 @@ public class JWE {
 
 
 
-
-    // =========================================================
-    // ALÍNEA (a): AES-GCM
-    // =========================================================
+    // ----------------------------- [ Alinea (a): AES-GCM ] -------------------------------------------------
 
     // Returns ciphertext followed by the authentication tag.
     private static byte[] aesEncrypt(String text, byte[] aad, SecretKey key, byte[] iv) throws Exception {
@@ -64,6 +61,7 @@ public class JWE {
         return new String(cipher.doFinal(encrypted), StandardCharsets.UTF_8);
     }
 
+
     private static void testA() throws Exception {
 
         KeyGenerator generator = KeyGenerator.getInstance("AES");
@@ -79,16 +77,14 @@ public class JWE {
         byte[] encrypted = aesEncrypt(message, aad, key, iv);
         String decrypted = aesDecrypt(encrypted, aad, key, iv);
 
-        System.out.println("Original text = " + message);
+        System.out.println("\nOriginal text = " + message);
         System.out.println("Decrypted text = " + decrypted);
         System.out.println("AES-GCM test = " + message.equals(decrypted));
     }
 
 
 
-    // =========================================================
-    // ALÍNEA (b): RSA key transport
-    // =========================================================
+    // -------------------------------- [ Alinea (b): RSA key transport ] ----------------------------------------------
 
     private static byte[] rsaEncryptKey(SecretKey key, PublicKey publicKey) throws Exception {
 
@@ -105,6 +101,7 @@ public class JWE {
         return new SecretKeySpec(keyBytes, "AES");
     }
 
+
     private static void testB(String certificateFile, String pfxFile) throws Exception {
 
         PublicKey publicKey = loadCertificate(certificateFile).getPublicKey();
@@ -117,28 +114,23 @@ public class JWE {
         byte[] encryptedKey = rsaEncryptKey(originalKey, publicKey);
         SecretKey recoveredKey = rsaDecryptKey(encryptedKey, privateKey);
 
-        System.out.println("RSA key transport test = " + Arrays.equals(originalKey.getEncoded(), recoveredKey.getEncoded()));
+        System.out.println("\nRSA key transport test = " + Arrays.equals(originalKey.getEncoded(), recoveredKey.getEncoded()));
     }
 
 
 
-    // =========================================================
-    // ALÍNEA (c): X.509 certificate and PFX private key
-    // =========================================================
+    // ----------------------------- [ Alinea (c): X.509 certificate and PFX private key ] -------------------------------------------------
 
     private static X509Certificate loadCertificate(String filename) throws Exception {
 
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
-
         try (InputStream input = Files.newInputStream(Path.of(filename))) {
             X509Certificate certificate = (X509Certificate) factory.generateCertificate(input);
 
             certificate.checkValidity();
-
             if (!"RSA".equalsIgnoreCase(certificate.getPublicKey().getAlgorithm())) {
                 throw new Exception("Certificate must contain an RSA key.");
             }
-
             return certificate;
         }
     }
@@ -146,50 +138,47 @@ public class JWE {
     private static PrivateKey loadPrivateKey(String filename) throws Exception {
 
         KeyStore store = KeyStore.getInstance("PKCS12");
-
         try (InputStream input = Files.newInputStream(Path.of(filename))) {
             store.load(input, DEFAULT_PRIVATE_KEY_PASSWORD);
         }
 
         Enumeration<String> aliases = store.aliases();
-
         while (aliases.hasMoreElements()) {
+
             String alias = aliases.nextElement();
-
             if (store.isKeyEntry(alias)) {
-                Key key = store.getKey(alias, DEFAULT_PRIVATE_KEY_PASSWORD);
 
+                Key key = store.getKey(alias, DEFAULT_PRIVATE_KEY_PASSWORD);
                 if (key instanceof PrivateKey && "RSA".equalsIgnoreCase(key.getAlgorithm())) {
 
                     Certificate certificate = store.getCertificate(alias);
-
                     if (certificate instanceof X509Certificate) {
                         ((X509Certificate) certificate).checkValidity();
                     }
-
                     return (PrivateKey) key;
                 }
             }
         }
-
         throw new Exception("No RSA private key found in the PFX.");
     }
+
 
     private static void testC(String certificateFile, String pfxFile) throws Exception {
 
         X509Certificate certificate = loadCertificate(certificateFile);
+        PublicKey publicKey = certificate.getPublicKey();
+
         PrivateKey privateKey = loadPrivateKey(pfxFile);
 
+        System.out.println("\nCertificate validated successfully.");
         System.out.println("Certificate subject = " + certificate.getSubjectX500Principal());
-        System.out.println("Public key algorithm = " + certificate.getPublicKey().getAlgorithm());
+        System.out.println("Public key algorithm = " + publicKey.getAlgorithm());
         System.out.println("Private key algorithm = " + privateKey.getAlgorithm());
     }
 
 
+    // -------------------------------------- [ Alinea (d): complete JWE ] ---------------------------------------------------------
 
-    // =========================================================
-    // ALÍNEA (d): complete JWE
-    // =========================================================
 
     private static String encrypt(String text, String certificateFile) throws Exception {
 
@@ -259,11 +248,7 @@ public class JWE {
     }
 
 
-
-
-    // =========================================================
-    // MAIN: choose which alínea to test
-    // =========================================================
+    // ----------------------------------------- [ Main ] -------------------------------------------------------------
 
     public static void main(String[] args) {
         try {
@@ -277,16 +262,15 @@ public class JWE {
 
             else if (args.length == 3 && args[0].equals("enc")) {
                 String token = encrypt(args[1], args[2]);
-                Files.writeString(Path.of(TOKEN_FILE), token,
-                        StandardCharsets.UTF_8);
+                Files.writeString(Path.of(TOKEN_FILE), token, StandardCharsets.UTF_8);
                 System.out.println("\nJWE token = " + token);
                 System.out.println("\nSaved to " + TOKEN_FILE);
             }
 
             else if (args.length == 2 && args[0].equals("dec")) {
+
                 String token = Files.readString(Path.of(TOKEN_FILE), StandardCharsets.UTF_8);
                 System.out.println("\n Decrypted text = " + decrypt(token, args[1]));
-
             }
         } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
@@ -295,6 +279,16 @@ public class JWE {
 }
 
 
-// Java compiler:       javac -d src src/exer5/JWE.java
-// Encrypt message:     java -cp src exer5.JWE enc "Hello Alice" src/exer5/certificates-keys/end-entities/Alice_1.cer
-// Decrypt message:     java -cp src exer5.JWE dec src/exer5/certificates-keys/pfx/Alice_1.pfx
+
+
+// Java compiler:           javac -d src src/exer5/JWE.java
+
+// Alinea a) test:          java -cp src exer5.JWE a
+
+// Alinea b) test:          java -cp src exer5.JWE b src/exer5/certificates-keys/end-entities/Alice_1.cer src/exer5/certificates-keys/pfx/Alice_1.pfx
+
+// Alinea c) test:          java -cp src exer5.JWE c src/exer5/certificates-keys/end-entities/Alice_1.cer src/exer5/certificates-keys/pfx/Alice_1.pfx
+
+// Alinea d) test:
+    // Encrypt message:     java -cp src exer5.JWE enc "Hello Alice" src/exer5/certificates-keys/end-entities/Alice_1.cer
+    // Decrypt message:     java -cp src exer5.JWE dec src/exer5/certificates-keys/pfx/Alice_1.pfx
