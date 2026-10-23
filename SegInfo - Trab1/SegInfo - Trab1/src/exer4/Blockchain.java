@@ -1,3 +1,5 @@
+package exer4;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -15,7 +17,7 @@ public class Blockchain{
     // new block hash must be bellow 1024
     private static final int TARGET = 1024;
 
-    private static final Path directoryPath = Paths.get("src", "Blocks");
+    private static final Path directoryPath = Paths.get("src", "exer4", "Blocks");
 
     private static final List<Double> blockCreationTimeList = new ArrayList<>();
 
@@ -163,7 +165,7 @@ public class Blockchain{
 
     public static void main(String[] args) throws Exception {
 
-        Path path = Paths.get("src", "alice.txt");
+        Path path = Paths.get("src", "exer4/alice.txt");
 
         int nBlocks = 1;
         if(args.length == 1){
